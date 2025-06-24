@@ -1,43 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Button, Space, Table, Tag } from "antd";
+import { Button, Modal, Space, Table, Tag } from "antd";
 import Header from "../components/Header";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import axios from "axios";
 
-const columns = [
-  {
-    title: "Title",
-    dataIndex: "title",
-    key: "title",
-    render: (text) => <a>{text}</a>,
-  },
-  {
-    title: "Description",
-    dataIndex: "description",
-    key: "description",
-  },
-  {
-    title: "Author",
-    dataIndex: "author",
-    key: "author",
-  },
-  {
-    title: "PublishDate",
-    dataIndex: "publishDate",
-    key: "publishDate",
-  },
-
-  {
-    title: "Action",
-    key: "action",
-    render: (_, record) => (
-      <Space size="middle">
-        <a>Edit</a>
-        <a>Delete</a>
-      </Space>
-    ),
-  },
-];
 const data = [
   {
     key: "1",
@@ -63,6 +29,57 @@ const data = [
 ];
 const Display = () => {
   const [books, setBooks] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [id, setId] = useState(null);
+  let navigate = useNavigate();
+
+  const columns = [
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+      render: (text) => <a>{text}</a>,
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+    },
+    {
+      title: "Author",
+      dataIndex: "author",
+      key: "author",
+    },
+    {
+      title: "PublishDate",
+      dataIndex: "publishDate",
+      key: "publishDate",
+    },
+
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => (
+        <Space size="middle">
+          <button
+            onClick={() => {
+              navigate("/form/" + record.id);
+            }}
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => {
+              setIsOpen(true);
+              setId(record.id);
+            }}
+          >
+            Delete
+          </button>
+        </Space>
+      ),
+    },
+  ];
 
   useEffect(() => {
     async function getBooks() {
@@ -76,6 +93,10 @@ const Display = () => {
     console.log(books);
   }, [books]);
 
+  async function handleDelete() {
+    const res = await axios.delete("http://localhost:8080/delete/" + id);
+  }
+
   return (
     <div>
       <Header />
@@ -83,6 +104,14 @@ const Display = () => {
         <Button> Add book</Button>
       </Link>
       <Table columns={columns} dataSource={books} />;
+      <Modal
+        open={isOpen}
+        onOk={() => setIsOpen(false)}
+        onCancel={() => setIsOpen(false)}
+        footer={null}
+      >
+        <Button onClick={handleDelete}>Confirm</Button>
+      </Modal>
     </div>
   );
 };

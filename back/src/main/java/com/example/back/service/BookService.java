@@ -26,13 +26,10 @@ public class BookService {
     public Book addBook(Book book) {
         return bookRepo.save(book);
     }
-    public void updateBook(Book book) {
-
-            bookRepo.save(book);
+    public Book updateBook(Book book) {
+        return bookRepo.save(book);
     }
-    public void deleteBook(Book book) {
-
-            bookRepo.delete(book);
-
+    public Book deleteBook(Long id) {
+        return bookRepo.deleteBookById(id);
     }
 }
