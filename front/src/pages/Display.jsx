@@ -1,32 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { Button, Modal, Space, Table, Tag } from "antd";
-import Header from "../components/Header";
-import { Link, useNavigate } from "react-router";
+import { Button, Modal, Space, Table } from "antd";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { toast } from 'react-toastify';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
-const data = [
-  {
-    key: "1",
-    title: "book1",
-    description: "test",
-    author: "test",
-    publishDate: "24/02/2024",
-  },
-  {
-    key: "2",
-    title: "book1",
-    Description: "test",
-    author: "test",
-    publishDate: "24/02/2024",
-  },
-  {
-    key: "3",
-    Title: "book1",
-    Description: "test",
-    author: "test",
-    publishDate: "24/02/2024",
-  },
-];
+
 const Display = () => {
   const [books, setBooks] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -50,32 +29,28 @@ const Display = () => {
       dataIndex: "author",
       key: "author",
     },
-    {
-      title: "PublishDate",
-      dataIndex: "publishDate",
-      key: "publishDate",
-    },
 
     {
       title: "Action",
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <button
-            onClick={() => {
-              navigate("/form/" + record.id);
-            }}
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => {
-              setIsOpen(true);
-              setId(record.id);
-            }}
-          >
-            Delete
-          </button>
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              onClick={() => navigate("/form/" + record.id)}
+            />
+            
+            <Button
+              type="text"
+              icon={<DeleteOutlined />}
+              danger
+              onClick={() => {
+                setIsOpen(true);
+                setId(record.id);
+              }}
+            />
+
         </Space>
       ),
     },
@@ -83,34 +58,97 @@ const Display = () => {
 
   useEffect(() => {
     async function getBooks() {
+      try {
       const res = await axios.get("http://localhost:8080/books/all");
       setBooks(res.data);
+    } catch (err) {
+      toast.error("Error loading book.");
+    }
     }
     getBooks();
   }, []);
 
-  useEffect(() => {
-    console.log(books);
-  }, [books]);
+
+  const fetchBooks = async () => {
+    try {
+      const res = await axios.get("http://localhost:8080/books/all");
+      setBooks(res.data);
+    } catch (err) {
+      toast.error("Error loading book.");
+    }
+  };
 
   async function handleDelete() {
-    const res = await axios.delete("http://localhost:8080/delete/" + id);
+    try {
+      await axios.delete("http://localhost:8080/books/delete/" + id);
+      setIsOpen(false);
+      toast.success("Book deleted successfully  ");
+      fetchBooks(); 
+    } catch (err) {
+      toast.error("Failed to delete book ");
+    }
   }
 
   return (
-    <div>
-      <Header />
-      <Link to={"/form"}>
-        <Button> Add book</Button>
-      </Link>
-      <Table columns={columns} dataSource={books} />;
+      <div className="min-h-screen bg-gray-100">
+      
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          
+          <div className="flex items-center space-x-3">
+            <div className="text-blue-600 text-3xl">
+              📚
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              Book Manager
+            </h1>
+          </div>
+        </div>
+      </header>
+
+
+      
+      <div className="max-w-5xl mx-auto px-4 mt-8 flex justify-end">
+        <Link to="/form">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Add Book
+          </Button>
+        </Link>
+      </div>
+
+      
+      <div className="max-w-5xl mx-auto px-4 mt-6">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <Table
+            columns={columns}
+            dataSource={books}
+            rowKey={(record) => record.id}
+            pagination={{ pageSize: 6 }}
+            className="custom-ant-table"
+          />
+        </div>
+      </div>
+
+      
       <Modal
+      className=""
         open={isOpen}
-        onOk={() => setIsOpen(false)}
+        title="Confirm Deletion"
         onCancel={() => setIsOpen(false)}
-        footer={null}
+        footer={[
+          <Button key="cancel" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>,
+          <Button key="confirm" danger onClick={handleDelete}>
+            Confirm
+          </Button>,
+        ]}
       >
-        <Button onClick={handleDelete}>Confirm</Button>
+        <p>Are you sure you want to delete this book?</p>
       </Modal>
     </div>
   );
